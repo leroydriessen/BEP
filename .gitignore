@@ -2,3 +2,5 @@ venv/
 QAMpy/
 summaries/
 output/
+
+*.png

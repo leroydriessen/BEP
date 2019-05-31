@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from qampy import signals
 
 """
 Plot the constellation of a dual polarized signal
@@ -8,17 +9,21 @@ Parameters:
   E: data sequence to plot
   T: title of graph
 """
-def plot_constellation(E, T):
-    os = int(E.fs / E.fb)
-    plt.scatter(E[0].real[::os], E[0].imag[::os], s=1, alpha=0.4, color='yellow', edgecolors='black', label="X-polarization")
-    plt.scatter(E[1].real[::os], E[1].imag[::os], s=1, alpha=0.4, color='blueviolet', edgecolors='black',
+def plot_constellation(E, T, F):
+    if isinstance(E, signals.SignalQAMGrayCoded):
+        os = int(E.fs / E.fb)
+    else:
+        os = 1
+    plt.scatter(E[0].real[::os], E[0].imag[::os], alpha=0.4, color='yellow', edgecolors='black', label="X-polarization")
+    plt.scatter(E[1].real[::os], E[1].imag[::os], alpha=0.4, color='blueviolet', edgecolors='black',
                 label="Y-polarization")
     plt.xlabel("In-phase")
     plt.ylabel("Quadrature")
     plt.title(T)
     plt.legend(loc=3)
-    plt.xlim([-2, 2])
-    plt.ylim([-2, 2])
+    plt.xlim([-3, 3])
+    plt.ylim([-3, 3])
+    plt.savefig(F+".png")
     plt.figure(figsize=(5, 5))
     plt.show()
 
@@ -33,7 +38,7 @@ Parameters:
   E: data sequence to plot
   T: title of graph
 '''
-def plot_time(E, T):
+def plot_time(E, T, F):
     os = int(E.fs / E.fb)
     if E.shape[1] / os > 16:
         E = E[0:16 * os, 0:16 * os]
@@ -56,4 +61,5 @@ def plot_time(E, T):
     ax.set_zlim([-1, 1])
     ax.set_title(T, pad=20)
     ax.legend(loc=6)
+    plt.savefig(F+".png")
     plt.show()

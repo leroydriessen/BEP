@@ -13,75 +13,82 @@ from datetime import datetime
 import random
 
 print("\nStart, current time is "+datetime.now().strftime("%H:%M:%S"))
-print("Generating 2^{:d} random bits per polarization in {:d}-QAM format...".format(int(np.log2(AMOUNT_OF_SYMBOLS)), MODULATION_SIZE))
-# Generate random signal and keep adding glass fiber impairments
-sig_original = signals.SignalQAMGrayCoded(MODULATION_SIZE, AMOUNT_OF_SYMBOLS, fb=SYMBOL_RATE, nmodes=2)
-sig = sig_original
 
-if PLOT_PICTURES:
-    plot_constellation(sig, "Signal constellation without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols=2^{:d}".format(int(SYMBOL_RATE / 1e9), int(np.log2(AMOUNT_OF_SYMBOLS))))
-    plot_time(sig, "X-polarization over time without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols={:d}".format(int(SYMBOL_RATE/1e9), 16 if AMOUNT_OF_SYMBOLS > 16 else AMOUNT_OF_SYMBOLS))
+if not USE_REAL_DATA:
+    print("Generating 2^{:d} random bits per polarization in {:d}-QAM format...".format(int(np.log2(AMOUNT_OF_SYMBOLS)), MODULATION_SIZE))
 
-if USE_PULSESHAPING:
-    print("Pulse-shaping the signal...")
-    sig = sig.resample(OVER_SAMPLING*sig.fb, renormalise=True, beta=BETA)
+    # Generate random signal and keep adding glass fiber impairments
+    sig_original = signals.SignalQAMGrayCoded(MODULATION_SIZE, AMOUNT_OF_SYMBOLS, fb=SYMBOL_RATE, nmodes=2)
+    sig = sig_original
+
     if PLOT_PICTURES:
-        plot_constellation(sig, "Signal constellation after RRcos pulseshaping\n" + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)))
-        plot_time(sig, "X-polarization over time after RRcos\n pulseshaping, " + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)))
+        plot_constellation(sig, "Signal constellation without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols=2^{:d}".format(int(SYMBOL_RATE / 1e9), int(np.log2(AMOUNT_OF_SYMBOLS))), "sig")
+        plot_time(sig, "X-polarization over time without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols={:d}".format(int(SYMBOL_RATE/1e9), 16 if AMOUNT_OF_SYMBOLS > 16 else AMOUNT_OF_SYMBOLS), "sig_time")
 
-if USE_AGWN or USE_PMD or USE_PHASE_NOISE or USE_FREQ_OFFSET:
-    print("Adding artificial signal impairments...")
+    if USE_PULSESHAPING:
+        print("Pulse-shaping the signal...")
+        sig = sig.resample(OVER_SAMPLING*sig.fb, renormalise=True, beta=BETA)
+        if PLOT_PICTURES:
+            plot_constellation(sig, "Signal constellation after RRcos pulseshaping\n" + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)), "sig_shaped")
+            plot_time(sig, "X-polarization over time after RRcos\n pulseshaping, " + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)), "sig_shaped_time")
 
-if USE_AGWN:
-    sig = impairments.change_snr(sig, SNR)
+    if USE_AGWN or USE_PMD or USE_PHASE_NOISE or USE_FREQ_OFFSET:
+        print("Adding artificial signal impairments...")
+
+    if USE_AGWN:
+        sig = impairments.change_snr(sig, SNR)
+        if PLOT_PICTURES:
+            plot_constellation(sig, "Signal constellation after pulseshaping\n and quantum noise, $SNR={:d}$".format(SNR), "sig_agwn")
+            plot_time(sig, "X-polarization over time after pulseshaping\n and quantum noise, $SNR={:d}$".format(SNR), "sig_agwn_time")
+
+    if USE_PMD:
+        sig = impairments.apply_PMD(sig, THETA, TDGD)
+        if PLOT_PICTURES:
+            plot_constellation(sig, "Signal constellation after pulseshaping, AGWN\n and PMD," + r"$\theta=\pi/{:d}$, $\Delta\tau ={:d}ps$".format(int((THETA/np.pi)**-1), int(TDGD*1e12)), "sig_agwn_pmd")
+            plot_time(sig, "X-polarization over time after pulseshaping,\n AGWN and PMD,"+r"$\theta=\pi/{:d}$, $\Delta\tau ={:d}ps$".format(int((THETA/np.pi)**-1), int(TDGD*1e12)), "sig_agwn_pmd_time")
+
+    if USE_PHASE_NOISE:
+        sig = impairments.apply_phase_noise(sig, LINEWIDTH)
+        if PLOT_PICTURES:
+            plot_constellation(sig, "Signal constellation after pulseshaping, AGWN\n PMD and phase noise, linewidth of laser = {:d}MHz".format(int(LINEWIDTH/1e6)), "sig_agwn_pmd_phase")
+            plot_time(sig, "Signal constellation after pulseshaping, AGWN\n PMD and phase noise, linewidth of laser = {:d}MHz".format(int(LINEWIDTH/1e6)), "sig_agwn_pmd_phase_time")
+
+    if USE_FREQ_OFFSET:
+        sig = impairments.add_carrier_offset(sig, FREQ_OFFSET)
+        if PLOT_PICTURES:
+            plot_constellation(sig, "Signal constellation at receiver, with AGWN, PMD,\n phase noise and frequency offset, $f_{offset}="+"{:d}MHz$".format(int(FREQ_OFFSET/1e6)), "sig_agwn_pmd_phase_freq")
+            plot_time(sig, "Signal constellation at receiver, with AGWN, PMD,\n phase noise and frequency offset, $f_{offset}="+"{:d}MHz$".format(int(FREQ_OFFSET/1e6)), "sig_agwn_pmd_phase_freq_time")
+
+    # lock the random seed to add traceability
+    random.seed(420691337)
+
+
+    # select the signal to use
+    if DISREGARD_OVERSAMPLING and USE_PULSESHAPING:
+        input_sig = sig[:, ::OVER_SAMPLING]
+    else:
+        input_sig = sig
+else:
+    real_data = np.load("8QAM_01loops_1.npy", allow_pickle=True)[()]
+    sig_original = real_data["transmitted_symbols"]
+    input_sig = real_data["received_samples"][:, :2**17]
+
+    MODULATION_SIZE = 2**3
+    OVER_SAMPLING = 2
+    AMOUNT_OF_SYMBOLS = 2**16
+    SYMBOL_RATE = 41.80e9
+    # SNR = 10
+    BETA = 0.01
+    DISREGARD_OVERSAMPLING=False
+
     if PLOT_PICTURES:
-        plot_constellation(sig, "Signal constellation after pulseshaping\n and quantum noise, $SNR={:d}$".format(SNR))
-        plot_time(sig, "X-polarization over time after pulseshaping\n and quantum noise, $SNR={:d}$".format(SNR))
+        plot_constellation(sig_original, "Real world 8-QAM data input constellation\nsymbol rate=41.80GBd, #symbols=65536", "real_input")
+        plot_constellation(input_sig[:, ::2], "Real world 8-QAM data output constellation\n(frequency offset compensated)", "real_output")
 
-if USE_PMD:
-    sig = impairments.apply_PMD(sig, THETA, TDGD)
-    if PLOT_PICTURES:
-        plot_constellation(sig, "Signal constellation after pulseshaping, AGWN\n and PMD," + r"$\theta=\pi/{:d}$, $\Delta\tau ={:d}ps$".format(int((THETA/np.pi)**-1), int(TDGD*1e12)))
-        plot_time(sig, "X-polarization over time after pulseshaping,\n AGWN and PMD,"+r"$\theta=\pi/{:d}$, $\Delta\tau ={:d}ps$".format(int((THETA/np.pi)**-1), int(TDGD*1e12)))
-
-if USE_PHASE_NOISE:
-    sig = impairments.apply_phase_noise(sig, LINEWIDTH)
-    if PLOT_PICTURES:
-        plot_constellation(sig, "Signal constellation after pulseshaping, AGWN\n PMD and phase noise, linewidth of laser = {:d}MHz".format(int(LINEWIDTH/1e6)))
-
-if USE_FREQ_OFFSET:
-    sig = impairments.add_carrier_offset(sig, FREQ_OFFSET)
-    if PLOT_PICTURES:
-        plot_constellation(sig, "Signal constellation at receiver, with AGWN\n PMD, phase noise and frequency offset, $f_{offset}="+"{:d}MHz$".format(int(FREQ_OFFSET/1e6)))
-
-# lock the random seed to add traceability
-random.seed(420691337)
 
 print("Manipulating data into 4d tensor...")
 
-# select the signal to use
-if DISREGARD_OVERSAMPLING and USE_PULSESHAPING:
-    input_sig = sig[:, ::OVER_SAMPLING]
-else:
-    input_sig = sig
-
-'''
-# extract for both polarizations the real and imaginary part of the symbol (tensor.size() = [4, AMOUNT_OF_SYMBOLS])
-if ADD_PHASE:
-    if USE_BPS:
-        _, phase = phaserec.bps_twostage(input_sig, 10, 15, SEQUENCE_LENGTH)
-    else:
-        _, phase = phaserec.viterbiviterbi(input_sig, SEQUENCE_LENGTH)
-        phase = (np.concatenate((np.zeros(SEQUENCE_LENGTH-1), phase)) % np.pi) / np.pi
-
-    phase = [[4*np.tan(x.imag/x.real)/np.pi for x in input_sig[0]], [4*np.tan(y.imag/y.real)/np.pi for y in input_sig[1]]]
-
-    input_array = torch.Tensor(np.vstack((input_sig[0].real, input_sig[1].real, input_sig[0].imag, input_sig[1].imag, phase)))
-else:
-'''
-
 input_array = torch.Tensor(np.vstack((input_sig[0].real, input_sig[1].real, input_sig[0].imag, input_sig[1].imag)))
-
 
 indices = list(range(AMOUNT_OF_SYMBOLS-SEQUENCE_LENGTH+1))  # AMOUNT_OF_SYMBOLS long, but subtracting the SEQUENCE LENGTH to avoid getting out of array bounds
 if SHUFFLE:
@@ -100,34 +107,53 @@ print("Generating correct labels...")
 
 remove_index = int(SEQUENCE_LENGTH/2) if not DISREGARD_OVERSAMPLING and USE_PULSESHAPING else SEQUENCE_LENGTH-1
 
+if not USE_REAL_DATA:
+    input_labels = sig_original.bits
+else:
+    input_labels = [[], []]
+    for j in range(2):
+        for i in range(len(sig_original[0])):
+            if sig_original[j][i] == -1.+1.j:
+                input_labels[j].extend([False, True, True])
+            elif sig_original[j][i] == 0.7320508075688772j:
+                input_labels[j].extend([True, True, True])
+            elif sig_original[j][i] == 1.+1.j:
+                input_labels[j].extend([True, False, True])
+            elif sig_original[j][i] == -0.7320508075688772:
+                input_labels[j].extend([False, False, True])
+            elif sig_original[j][i] == 0.7320508075688772:
+                input_labels[j].extend([True, False, False])
+            elif sig_original[j][i] == -1.-1.j:
+                input_labels[j].extend([False, False, False])
+            elif sig_original[j][i] == -0.7320508075688772j:
+                input_labels[j].extend([False, True, False])
+            elif sig_original[j][i] == 1.-1.j:
+                input_labels[j].extend([True, True, False])
+            else:
+                exit(1)
+    input_labels = np.array(input_labels)
+
 # create label batches
 if SHUFFLE:
     labels = []
-    labels_ordered = np.array(sig_original.bits.transpose().reshape(-1, int(np.log2(MODULATION_SIZE)*2)).astype(int)[remove_index:])  # remove the first SEQUENCE_LENGTH-1 labels, as there do not exist data sequences that use those labels
+    labels_ordered = np.array(input_labels.transpose().reshape(-1, int(np.log2(MODULATION_SIZE)*2)).astype(int)[remove_index:])  # remove the first SEQUENCE_LENGTH-1 labels, as there do not exist data sequences that use those labels
     for i in indices:
         labels.append(labels_ordered[i])
     labels = torch.Tensor(labels)
 else:
-    labels = torch.Tensor(np.array(sig_original.bits.transpose().reshape(-1, int(np.log2(MODULATION_SIZE)*2)).astype(int))[remove_index:])  # remove the first SEQUENCE_LENGTH-1 labels, as there do not exist data sequences that use those labels
+    labels = torch.Tensor(np.array(input_labels.transpose().reshape(-1, int(np.log2(MODULATION_SIZE)*2)).astype(int))[remove_index:])  # remove the first SEQUENCE_LENGTH-1 labels, as there do not exist data sequences that use those labels
 label_batches = torch.stack(torch.split(labels, BATCH_SIZE)[:-1])  # remove the last batch since it might be of smaller dimension than the rest of the batches
 
 # create network, optimizer and loss function
-if ADD_PHASE and USE_BPS:
-    input_dim = 6
-elif ADD_PHASE:
-    input_dim = 5
-else:
-    input_dim = 4
-
 print("Initializing neural network...")
 
-lstm = LSTM(input_dim=input_dim, num_hidden=HIDDEN_NODES, hidden_layers=HIDDEN_LAYERS, num_classes=int(np.log2(MODULATION_SIZE)*2), batch_size=BATCH_SIZE, device="cpu")
+lstm = LSTM(input_dim=4, num_hidden=HIDDEN_NODES, hidden_layers=HIDDEN_LAYERS, num_classes=int(np.log2(MODULATION_SIZE)*2), batch_size=BATCH_SIZE, device="cpu")
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LEARNING_RATE)
 criterion = nn.MSELoss()
 
 # initiate summary writer
 if TENSORBOARD:
-    directory = './summaries/'+datetime.now().strftime("%Y-%m-%d_%H:%M")+"_mod{:d}_snr{:d}_lw{:.0E}_freq%{:.0E}_seq{:d}_lr{:.4f}_nn{:d}x{:d}_bs{:d}_shuffle{:b}_phase{:b}_bps{:b}".format(MODULATION_SIZE, SNR, LINEWIDTH, FREQ_OFFSET, SEQUENCE_LENGTH, LEARNING_RATE, HIDDEN_NODES, HIDDEN_LAYERS, BATCH_SIZE, SHUFFLE, ADD_PHASE, USE_BPS)
+    directory = './summaries/'+datetime.now().strftime("%Y-%m-%d_%H:%M")+"_mod{:d}_snr{:d}_lw{:.0E}_freq%{:.0E}_seq{:d}_lr{:.4f}_nn{:d}x{:d}_bs{:d}".format(MODULATION_SIZE, SNR, LINEWIDTH, FREQ_OFFSET, SEQUENCE_LENGTH, LEARNING_RATE, HIDDEN_NODES, HIDDEN_LAYERS, BATCH_SIZE)
     print("Initializing Tensorboard at " + directory + "...")
     writer = SummaryWriter(directory)
 

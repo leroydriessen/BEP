@@ -42,8 +42,6 @@ sig_gauss = impairments.change_snr(sig, 15.)
 sig = np.array(sig)
 label_names = {key: value for (key, value) in zip(np.unique(sig), range(len(np.unique(sig))))}
 
-sig_gauss = impairments.add_awgn(sig, 0.05)
-# sig_gauss = impairments.change_snr(sig, 15.)
 plot_constellation(sig_gauss)
 
 sig = np.hstack((sig[0], sig[1]))
