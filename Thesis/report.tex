@@ -83,7 +83,7 @@ First, GVD is compensated for in a fixed filter. Then, all other linear impairme
 \end{align}
 where n is the symbol iteration number, $\mu$ is the step-size, $e_{X}$ and $e_{Y}$ are the error signals, and $E_x$ and $E_y$ are the energies of all the included past symbols. $e_{X}$ and $e_{Y}$ are defined to be the difference between the energy of respectively the in-phase and quadrature signal components and the expected in-phase and quadrature components, which are provided in training mode.
 
-Afterwards, the carrier phase is recovered. This can be done with the M-th viterbi-viterbi algorithm\cite{coherent_detection,viterbi}, which takes the symbols to the M-th power and divides with M to get rid of the phase modulation and only output the residue unwanted carrier phase offset. Alternatively, a single stage or two-stage blind phase search (BPS) algorithm can be used. After carrier phase compensation, the signal can finally be decoded and all information can be extracted.
+Afterwards, the carrier phase is recovered. This can be done with the M-th viterbi-viterbi algorithm\cite{coherent_detection,viterbi}, which takes the symbols to the M-th power and divides with M to get rid of the phase modulation and only output the unwanted residue carrier phase offset. Alternatively, a single stage\cite{1stagebps} or two-stage\cite{2stagebps} blind phase search (BPS) algorithm can be used. After carrier phase compensation, the signal can finally be decoded and all information can be extracted.
 
 \section{Machine learning techniques}
 Machine learning is a popular subset of the scientific field of Artificial Intelligence. Machine learning is a relatively new concept and has a variety of practical applications. The concept of machine learning is that an computational algorithm is formed, which is not explicitly programmed, but is rather incrementally formed with the use of data. This data is called the training data and this data adapts the current algorithm into a better performing algorithm in small steps using the principles of statistics. Because machine learning is based on statistics and not on predefined behaviour, machine learning is regarded as a black box solution to algorithmic problems.
@@ -93,7 +93,7 @@ Machine learning can be categorized into three different paradigms of learning: 
 Machine learning solutions can be useful when there are complex statistical problems with clear  input and output data that involve decision making, categorizing data or giving predictions. After training, the developed algorithm to perform this task is abstract (black box solution).
 
 \subsection{Artificial neural networks}
-Within supervised machine learning, artificial neural networks are commonly used to develop solutions. This technique is inspired by how the networks of neurons in animal brains work. An example of an artificial neural network is given in Fig.~\ref{fig:nn}. In the example network, the input values, $x_n$ for $n\in \{1..5\}$ are multiplied with edge weights that are incorporated in a weight matrix $W^{(1)}$. A bias $b^{(1)}$ is added to this resulting vector. To keep the elements in this vector within certain bounds and to add non-linearity to the neural network, the elements of the vector are first sent through an activation function. A commonly used activation function is the Sigmoid function $\sigma(x) = \frac{1}{1+e^{-x}}$. The elements of the resulting vector are the nodes of the first hidden layer in the neural network, $a_n^{(2)}$ for $n\in \{1..3\}$. Mathematically, the next layer $a^{(n+1)}$ is calculated by 
+Within supervised machine learning, artificial neural networks are commonly used to develop solutions. This technique is inspired by how the networks of neurons in animal brains work. An example of an artificial neural network is given in Fig.~\ref{fig:nn}. In the example network, the input values, $x_n$ for $n\in \{1..4\}$ are multiplied with edge weights that are incorporated in a weight matrix $W^{(1)}$. A bias vector $b^{(1)}$ is added to the result. To keep the elements in this vector within certain bounds and to add non-linearity to the neural network, the elements of the vector are first sent through an activation function. A commonly used activation function is the Sigmoid function $\sigma(x) = \frac{1}{1+e^{-x}}$. The elements of the resulting vector are the nodes of the first hidden layer in the neural network, $a_n^{(2)}$ for $n\in \{1..6\}$. Mathematically, the next layer $a^{(n+1)}$ is calculated by 
 \begin{equation}
     a^{(n+1)} = \sigma\left(a^{(n)}W^{(n)}+b^{(n)}\right),
 \end{equation}
@@ -101,7 +101,7 @@ where $n$ is a layer number. To account for the first and last layer, $a^{(1)} =
 
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{Thesis/images/nn.png}
+    \includegraphics[width=\linewidth]{Thesis/images/nn.pdf}
     \caption{Example of artificial neural network}
     \label{fig:nn}
 \end{figure}
