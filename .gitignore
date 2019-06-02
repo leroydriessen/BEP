@@ -1,6 +1,9 @@
+.idea/
 venv/
 QAMpy/
 summaries/
 output/
+__pycache__/
 
 *.png
+*.npy
