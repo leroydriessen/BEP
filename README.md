@@ -3,6 +3,7 @@ Electrical Engineering bachelor end project of Leroy Driessen concerning an arti
 
 Install guide:
 
+`git clone https://github.com/leroydriessen/BEP.git`\
 `git clone https://github.com/ChalmersPhotonicsLab/QAMpy.git`\
 `cd QAMpy`\
 `pip install numpy scipy cython bitarray numba`\
