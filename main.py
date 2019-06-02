@@ -77,12 +77,11 @@ else:
     OVER_SAMPLING = 2
     AMOUNT_OF_SYMBOLS = 2**16
     SYMBOL_RATE = 41.80e9
-    # SNR = 10
     BETA = 0.01
-    DISREGARD_OVERSAMPLING=False
+    DISREGARD_OVERSAMPLING = False
 
     if PLOT_PICTURES:
-        plot_constellation(sig_original, "Real world 8-QAM data input constellation\nsymbol rate=41.80GBd, #symbols=65536", "real_input")
+        plot_constellation(sig_original, "Real world 8-QAM data input constellation\nsymbol rate=41.80GBd, #symbols=2^16", "real_input")
         plot_constellation(input_sig[:, ::2], "Real world 8-QAM data output constellation\n(frequency offset compensated)", "real_output")
 
 
