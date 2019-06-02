@@ -8,7 +8,7 @@ Install guide:
 `pip install numpy scipy cython bitarray numba`\
 `python3 setup.py build`\
 `python3 setup.py install`\
-`apt-get install python3-tk`
+`apt-get install python3-tk`\
 `pip install matplotlib tensorflow torch torchvision`\
 `cd ..`\
 `python3 main.py`
