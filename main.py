@@ -23,13 +23,13 @@ if not USE_REAL_DATA:
 
     if PLOT_PICTURES:
         plot_constellation(sig, "Signal constellation without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols=2^{:d}".format(int(SYMBOL_RATE / 1e9), int(np.log2(AMOUNT_OF_SYMBOLS))), "sig")
-        plot_time(sig, "X-polarization over time without distortions\n $F_{symbol}=" + "{:d}GBd$, #symbols={:d}".format(int(SYMBOL_RATE/1e9), 16 if AMOUNT_OF_SYMBOLS > 16 else AMOUNT_OF_SYMBOLS), "sig_time")
+        plot_time(sig, "X-polarization over time without\n distortions $F_{symbol}=" + "{:d}GBd$".format(int(SYMBOL_RATE/1e9)), "sig_time")
 
     if USE_PULSESHAPING:
         print("Pulse-shaping the signal...")
         sig = sig.resample(OVER_SAMPLING*sig.fb, renormalise=True, beta=BETA)
         if PLOT_PICTURES:
-            plot_constellation(sig, "Signal constellation after RRcos pulseshaping\n" + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)), "sig_shaped")
+            plot_constellation(sig, "Signal constellation after RRcos\n pulseshaping " + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)), "sig_shaped")
             plot_time(sig, "X-polarization over time after RRcos\n pulseshaping, " + r"$\beta={:.1f}$, $F_s={:d}GHz$".format(BETA, int(SYMBOL_RATE*OVER_SAMPLING/1e9)), "sig_shaped_time")
 
     if USE_AGWN or USE_PMD or USE_PHASE_NOISE or USE_FREQ_OFFSET:

@@ -10,6 +10,7 @@ Parameters:
   T: title of graph
 """
 def plot_constellation(E, T, F):
+    plt.rcParams.update({'font.size': 15})
     if isinstance(E, signals.SignalQAMGrayCoded):
         os = int(E.fs / E.fb)
     else:
@@ -23,8 +24,8 @@ def plot_constellation(E, T, F):
     plt.legend(loc=3)
     plt.xlim([-3, 3])
     plt.ylim([-3, 3])
-    plt.savefig(F+".png")
-    plt.figure(figsize=(5, 5))
+    plt.savefig(F+".png", bbox_inches="tight", pad_inches=.5)
+    plt.figure(figsize=(6, 6))
     plt.show()
 
 '''
@@ -39,10 +40,11 @@ Parameters:
   T: title of graph
 '''
 def plot_time(E, T, F):
+    plt.rcParams.update({'font.size': 15})
     os = int(E.fs / E.fb)
     if E.shape[1] / os > 16:
         E = E[0:16 * os, 0:16 * os]
-    fig = plt.figure(figsize=(5, 5))
+    fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot(np.linspace(0, E.shape[1] / (E.fs / E.fb), E.shape[1], endpoint=False), E[0].real, zdir='y', label=r'$X_I$')
     ax.plot(np.linspace(0, E.shape[1] / (E.fs / E.fb), E.shape[1], endpoint=False), E[0].imag, zdir='z', label=r'$X_Q$')
@@ -52,14 +54,17 @@ def plot_time(E, T, F):
     ax.add_collection3d(
         plt.fill_between(np.linspace(0, E.shape[1] / (E.fs / E.fb), E.shape[1], endpoint=False), E[0].imag, 0,
                          alpha=0.3), 0, zdir='z')
-    ax.view_init(elev=40., azim=-65)
-    ax.set_xlabel("Time")
-    ax.set_ylabel("In-phase")
-    ax.set_zlabel("Quadrature")
+    ax.view_init(elev=30., azim=-65)
+    ax.set_xlabel("Time", labelpad=8)
+    ax.set_ylabel("In-phase", labelpad=8)
+    ax.set_zlabel("Quadrature", labelpad=8)
+    ax.locator_params('x', tight=True, nbins=8)
+    ax.locator_params('y', tight=True, nbins=3)
+    ax.locator_params('z', tight=True, nbins=3)
     ax.set_xlim([0, 16])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
     ax.set_title(T, pad=20)
     ax.legend(loc=6)
-    plt.savefig(F+".png")
+    plt.savefig(F+".png", bbox_inches="tight", pad_inches=.5)
     plt.show()
